@@ -5,7 +5,7 @@ import java.util.stream.*;
 public class TSP{
   static Random rand = new Random();
 
-  static int amount = 7;
+  static int amount = 10;
   static ArrayList<Double> pathLength = new ArrayList<Double>();
   static ArrayList<int[]> paths = new ArrayList<int[]>();
   static Double[][] lengths = new Double[amount][amount];
@@ -28,7 +28,7 @@ public class TSP{
         double sidea = Math.pow(   coords[j][0]   -   coords[i][0] , 2);
         double sideb = Math.pow(   coords[j][1]   -   coords[i][1] , 2);
         lengths[i][j] = Math.sqrt(sidea + sideb);
-      }
+        }
     }
     for (int i = 0; i < amount;i++ ) {
       for (int j = i+1 ; j< amount; j++) {
