@@ -7,8 +7,8 @@ public class test{
   static int amount = 5;
 
   public static void main(String args[]){
-    String str = "ABC";
-    int n = str.length();
+    int[] str = {1,2,3};
+    int n = str.length;
     permute(str, 0, n-1);
 
     Double[][] lengths = new Double[amount][amount];
@@ -47,9 +47,11 @@ public class test{
     System.out.println(String.valueOf(totaldist));
   }
 
-  static void permute(String str, int l, int r) {
+  static void permute(int[] str, int l, int r) {
+    int[] temp = new int[]
+
     if (l == r)
-        System.out.println(str);
+        printArray(str);
     else
     {
         for (int i = l; i <= r; i++)
@@ -60,13 +62,17 @@ public class test{
         }
     }
   }
-  static String swap(String a, int i, int j) {
-      char temp;
-      char[] charArray = a.toCharArray();
-      temp = charArray[i] ;
-      charArray[i] = charArray[j];
-      charArray[j] = temp;
-      return String.valueOf(charArray);
+  static int[] swap(int[] a, int i, int j) {
+      int temp = a[i] ;
+      a[i] = a[j];
+      a[j] = temp;
+      return a;
+  }
+  static void printArray(int[] arg){
+    for (int i = 0; i < arg.length; i++ ) {
+      System.out.print(arg[i] + " ");
+    }
+    System.out.println();
   }
 
 }
