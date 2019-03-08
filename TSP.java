@@ -5,7 +5,7 @@ import java.util.stream.*;
 public class TSP{
   static Random rand = new Random();
 
-  static int amount = 11;
+  static int amount = 7;
   static ArrayList<Double> pathLength = new ArrayList<Double>();
   static ArrayList<int[]> paths = new ArrayList<int[]>();
   static Double[][] lengths = new Double[amount][amount];
@@ -48,8 +48,8 @@ public class TSP{
     
     /* Here there be graphics */
 
-    StdDraw.setXscale(0, 100);
-		StdDraw.setYscale(0, 100);
+    StdDraw.setXscale(-5, 105);
+		StdDraw.setYscale(-5, 105);
     StdDraw.setPenRadius(0.1/10);
     StdDraw.setPenColor(StdDraw.RED);
     int[] prev = coords[0];
