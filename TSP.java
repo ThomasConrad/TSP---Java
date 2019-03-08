@@ -50,7 +50,7 @@ public class TSP{
 
     StdDraw.setXscale(-5, 105);
 		StdDraw.setYscale(-5, 105);
-    StdDraw.setPenRadius(0.1/10);
+    StdDraw.setPenRadius(0.05/10);
     StdDraw.setPenColor(StdDraw.RED);
     int[] prev = coords[0];
     int[] best = paths.get(pathLength.indexOf(Collections.min(pathLength)));
