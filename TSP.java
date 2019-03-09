@@ -5,7 +5,7 @@ import java.util.stream.*;
 public class TSP{
   static Random rand = new Random();
 
-  static int amount = 10;
+  static int amount = 13;
   static ArrayList<Double> pathLength = new ArrayList<Double>();
   static ArrayList<int[]> paths = new ArrayList<int[]>();
   static Double[][] lengths = new Double[amount][amount];
