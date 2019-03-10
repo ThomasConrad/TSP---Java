@@ -103,6 +103,8 @@
     var map;
     var marker;
     var adresses = new Array();
+    var counter = 0;
+    var service;
 
     var placeSearch, autocomplete;
 
@@ -141,15 +143,40 @@
     }
 
     function addToList(){
+      var place = autocomplete.getPlace();
       marker = new google.maps.Marker({
-        position: autocomplete.getPlace().geometry.location,
-        title: "Hello World!"
+        position: place.geometry.location,
+        title: place.name,
       });
-      adresses.push(autocomplete.getPlace().address_components);
+      adresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
       marker.setMap(map);
 
       console.log(adresses);
+      counter ++;
+      if (counter == 2){
+        service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+          origins: [adresses[0]],
+          destinations: [adresses[1]],
+          travelMode: 'DRIVING',
+          unitSystem: google.maps.UnitSystem.METRIC,
+          avoidHighways: false,
+          avoidTolls: false
+        },callback)
+        
+      }
+
     }
+
+  function callback(response, status) {
+    if (status == 'OK') {
+      var origins = response.originAddresses;
+      var destinations = response.destinationAddresses;
+      console.log(response.rows)
+      
+    } 
+  }
+
 
     function fillInAddress() {
       // Get the place details from the autocomplete object.
