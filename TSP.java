@@ -4,7 +4,7 @@ import java.util.stream.*;
 public class TSP{
   static Random rand = new Random();
 
-  static int amount = 10;
+  static int amount = 2;
   static Double[][] lengths = new Double[amount][amount];
   static int[] bestPath = new int[amount - 1];
   static double bestLength;
@@ -74,7 +74,7 @@ public class TSP{
   static void permute(int[] input, int l, int r) {
 
     if (l == r){
-      if (calcLength(input) < bestLength) {
+      if (calcLength(input) <= bestLength) {
         bestLength = calcLength(input);
         bestPath = input.clone();
       }
