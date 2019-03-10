@@ -4,7 +4,7 @@ import java.util.stream.*;
 public class TSP{
   static Random rand = new Random();
 
-  static int amount = 2;
+  static int amount = 9;
   static Double[][] lengths = new Double[amount][amount];
   static int[] bestPath = new int[amount - 1];
   static double bestLength;
