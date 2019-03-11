@@ -19,33 +19,41 @@
       margin: 0;
       padding: 0;
     }
-    table, th, tr,caption {
+    table, th,tr,caption {
       border: 1px solid black;
       border-collapse: collapse;
-      padding: 20px;
+      padding: 10pt;
       text-align: left;
+      background:white;
+      margin:5%;
     }
+    td{
+      padding-left: 10pt;
+      padding-right:10pt;
+      margin:5%;
+    }
+
   </style>
   <link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
   
 </head>
 
 <body>
-    
-  <section class="container">
-    <div id="map" style="float:left; width:90%;height:100vh;"></div>
-    <div id="locationField">
-      <input id="autocomplete" placeholder="Enter your origin" onFocus="geolocate()" type="text" />
-    </div>
-    <div id="locationField">
-      <input id="originInput" placeholder="Enter your addresses" onFocus="geolocate()" type="text" />
-    </div>
+<div id="map" style=" width:100%;height:100vh;"></div>
+<section style="font-size:12pt"id = "things" class="autocomplete">
+  
+  <div id="Origin">
+    <input style="font-size:12pt;margin-left:5%"  id="autocomplete" placeholder="Enter your origin" onFocus="geolocate()" type="text" />
+  </div>
+  <div id="Adresses">
+    <input style="font-size:12pt;margin-left:5%" id="originInput" placeholder="Enter your addresses" onFocus="geolocate()" type="text" />
+  </div>
 
 
-    <table id="listOfThings"style="border:1px solid black">
-      <th>Addresses</th>
-    </table>
-  </section>
+  <table id="listOfThings"style="border:1px solid black">
+    <th>Addresses</th>
+  </table>
+</section>
   
   
 
@@ -85,16 +93,20 @@
       var mapOptions = {
         center: new google.maps.LatLng(55.7635, 12.4949),
         zoom: 10,
+        fullscreenControl: false
       };
 
       map = new google.maps.Map(document.getElementById("map"), mapOptions);
-
+      map.controls[google.maps.ControlPosition.LEFT].push(document.getElementById('things'));
       autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), { types: ['geocode'] });
       originInput = new google.maps.places.Autocomplete(document.getElementById('originInput'), { types: ['geocode'] });
       var list = document.getElementById("listOfThings");
       for (var i = 0; i < 10; i++){
-        var item = document.createElement('tr');
-        item.appendChild(document.createTextNode("jeg er en kat"));
+        item = document.createElement('tr');
+        row = document.createElement('td')
+        row.appendChild(document.createTextNode(i));
+        item.appendChild(row);
+ 
         list.appendChild(item);
       }
       
