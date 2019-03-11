@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Place Autocomplete Address Form</title>
+  <title>TDR IN MAPS</title>
   <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
   <meta charset="utf-8">
   <style>
@@ -19,94 +19,54 @@
       margin: 0;
       padding: 0;
     }
+    table, th, tr,caption {
+      border: 1px solid black;
+      border-collapse: collapse;
+      padding: 20px;
+      text-align: left;
+    }
   </style>
   <link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
-  <style>
-    #locationField, #controls {
-        position: relative;
-        width: 480px;
-      }
-      #autocomplete {
-        position: absolute;
-        top: 0px;
-        left: 0px;
-        width: 99%;
-      }
-      .label {
-        text-align: right;
-        font-weight: bold;
-        width: 100px;
-        color: #303030;
-        font-family: "Roboto";
-      }
-      #address {
-        border: 1px solid #000090;
-        background-color: #f0f9ff;
-        width: 480px;
-        padding-right: 2px;
-      }
-      #address td {
-        font-size: 10pt;
-      }
-      .field {
-        width: 99%;
-      }
-      .slimField {
-        width: 80px;
-      }
-      .wideField {
-        width: 200px;
-      }
-      #locationField {
-        height: 20px;
-        margin-bottom: 2px;
-      }
-    </style>
+  
 </head>
 
 <body>
-  <div id="locationField">
-    <input id="autocomplete" placeholder="Enter your address" onFocus="geolocate()" type="text" />
-  </div>
+    
+  <section class="container">
+    <div id="map" style="float:left; width:90%;height:100vh;"></div>
+    <div id="locationField">
+      <input id="autocomplete" placeholder="Enter your origin" onFocus="geolocate()" type="text" />
+    </div>
+    <div id="locationField">
+      <input id="originInput" placeholder="Enter your addresses" onFocus="geolocate()" type="text" />
+    </div>
+
+
+    <table id="listOfThings"style="border:1px solid black">
+      <th>Addresses</th>
+    </table>
+  </section>
+  
+  
 
   <!-- Note: The address components in this sample are typical. You might need to adjust them for
                the locations relevant to your app. For more information, see
          https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete-addressform
     -->
 
-  <table id="address">
-    <tr>
-      <td class="label">Street address</td>
-      <td class="slimField"><input class="field" id="street_number" disabled="true" /></td>
-      <td class="wideField" colspan="2"><input class="field" id="route" disabled="true" /></td>
-    </tr>
-    <tr>
-      <td class="label">City</td>
-      <td class="wideField" colspan="3"><input class="field" id="locality" disabled="true" /></td>
-    </tr>
-    <tr>
-      <td class="label">State</td>
-      <td class="slimField"><input class="field" id="administrative_area_level_1" disabled="true" /></td>
-      <td class="label">Zip code</td>
-      <td class="wideField"><input class="field" id="postal_code" disabled="true" /></td>
-    </tr>
-    <tr>
-      <td class="label">Country</td>
-      <td class="wideField" colspan="3"><input class="field" id="country" disabled="true" /></td>
-    </tr>
-  </table>
-  <div id="map" style="width:100%;height:85vh;"></div>
+  
+
   <script>
 
 
 
     var map;
     var marker;
-    var adresses = new Array();
+    var addresses = new Array();
     var counter = 0;
     var service;
 
-    var placeSearch, autocomplete;
+    var placeSearch, autocomplete, originInput;
 
     var componentForm = {
       street_number: 'short_name',
@@ -130,6 +90,16 @@
       map = new google.maps.Map(document.getElementById("map"), mapOptions);
 
       autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), { types: ['geocode'] });
+      originInput = new google.maps.places.Autocomplete(document.getElementById('originInput'), { types: ['geocode'] });
+      var list = document.getElementById("listOfThings");
+      for (var i = 0; i < 10; i++){
+        var item = document.createElement('tr');
+        item.appendChild(document.createTextNode("jeg er en kat"));
+        list.appendChild(item);
+      }
+      
+
+
 
       // When the user selects an address from the drop-down, populate the
       // address fields in the form.
@@ -137,7 +107,6 @@
      
       // To add the marker to the map, call setMap();
  
-      autocomplete.addListener('place_changed', fillInAddress);
       autocomplete.addListener('place_changed',addToList);
 
     }
@@ -148,17 +117,17 @@
         position: place.geometry.location,
         title: place.name,
       });
-      adresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
+      addresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
       marker.setMap(map);
 
-      console.log(adresses);
+      console.log(addresses);
       counter ++;
       if (counter == 2){
         service = new google.maps.DistanceMatrixService();
         service.getDistanceMatrix({
-          origins: [adresses[0]],
-          destinations: [adresses[1]],
-          travelMode: 'DRIVING',
+          origins: [addresses[0]],
+          destinations: [addresses[1]],
+          travelMode: 'TRANSIT',
           unitSystem: google.maps.UnitSystem.METRIC,
           avoidHighways: false,
           avoidTolls: false
@@ -178,25 +147,6 @@
   }
 
 
-    function fillInAddress() {
-      // Get the place details from the autocomplete object.
-      var place = autocomplete.getPlace();
-
-      for (var component in componentForm) {
-        document.getElementById(component).value = '';
-        document.getElementById(component).disabled = false;
-      }
-
-      // Get each component of the address from the place details,
-      // and then fill-in the corresponding field on the form.
-      for (var i = 0; i < place.address_components.length; i++) {
-        var addressType = place.address_components[i].types[0];
-        if (componentForm[addressType]) {
-          var val = place.address_components[i][componentForm[addressType]];
-          document.getElementById(addressType).value = val;
-        }
-      }
-    }
 
     // Bias the autocomplete object to the user's geographical location,
     // as supplied by the browser's 'navigator.geolocation' object.
@@ -210,6 +160,7 @@
           var circle = new google.maps.Circle(
             { center: geolocation, radius: position.coords.accuracy });
           autocomplete.setBounds(circle.getBounds());
+          originInput.setBounds(circle.getBounds());
         });
       }
     }
