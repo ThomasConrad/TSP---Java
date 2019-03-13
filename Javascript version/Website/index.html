@@ -25,12 +25,28 @@
       padding: 10pt;
       text-align: left;
       background:white;
-      margin:5%;
+      margin-left:5%;
+      margin-top:2%;
+      width:100%;
     }
     td{
       padding-left: 10pt;
       padding-right:10pt;
       margin:5%;
+    }
+    input{
+      margin-top:0.5%;
+      background: white;
+      border-color: black;
+      border-style: solid;
+      border-width: 1pt;
+    }
+    button{
+      background: white;
+      border-color: black;
+      border-style: solid;
+      border-width: 1pt;
+      color:black;
     }
 
   </style>
@@ -42,27 +58,23 @@
 <div id="map" style=" width:100%;height:100vh;"></div>
 <section style="font-size:12pt"id = "things" class="autocomplete">
   
-  <div id="Origin">
-    <input style="font-size:12pt;margin-left:5%"  id="autocomplete" placeholder="Enter your origin" onFocus="geolocate()" type="text" />
-  </div>
+  
   <div id="Adresses">
-    <input style="font-size:12pt;margin-left:5%" id="originInput" placeholder="Enter your addresses" onFocus="geolocate()" type="text" />
+    <input size="35" style="font-size:12pt;margin-left:5%" id="originInput" placeholder="Enter your origin" onFocus="geolocate()" type="text" />
   </div>
-
+  <div id="Origin">
+    <input size="35" style="font-size:12pt;margin-left:5%"  id="autocomplete" placeholder="Enter your stops" onFocus="geolocate()" type="text" />
+  </div>
+  <div id="Endpoint">
+    <input size="35" style="font-size:12pt;margin-left:5%" id="endInput" placeholder="Enter your endpoint" onFocus="geolocate()" type="text" />
+  </div>
+  <button type="button" style="font-size:12pt;margin-left:5%;margin-top: 2%" onclick="alert('Hello world!')"> Calculate route! </button>
 
   <table id="listOfThings"style="border:1px solid black">
     <th>Addresses</th>
   </table>
 </section>
-  
-  
 
-  <!-- Note: The address components in this sample are typical. You might need to adjust them for
-               the locations relevant to your app. For more information, see
-         https://developers.google.com/maps/documentation/javascript/examples/places-autocomplete-addressform
-    -->
-
-  
 
   <script>
 
@@ -73,8 +85,10 @@
     var addresses = new Array();
     var counter = 0;
     var service;
+    var origin;
+    var endpoint;
 
-    var placeSearch, autocomplete, originInput;
+    var placeSearch, autocomplete, originInput, endInput;
 
     var componentForm = {
       street_number: 'short_name',
@@ -100,39 +114,35 @@
       map.controls[google.maps.ControlPosition.LEFT].push(document.getElementById('things'));
       autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), { types: ['geocode'] });
       originInput = new google.maps.places.Autocomplete(document.getElementById('originInput'), { types: ['geocode'] });
-      var list = document.getElementById("listOfThings");
-      for (var i = 0; i < 10; i++){
-        item = document.createElement('tr');
-        row = document.createElement('td')
-        row.appendChild(document.createTextNode(i));
-        item.appendChild(row);
- 
-        list.appendChild(item);
-      }
-      
+      endInput = new google.maps.places.Autocomplete(document.getElementById('endInput'), { types: ['geocode'] });
 
-
-
-      // When the user selects an address from the drop-down, populate the
-      // address fields in the form.
-       
-     
-      // To add the marker to the map, call setMap();
- 
       autocomplete.addListener('place_changed',addToList);
+      originInput.addListener('place_changed', addOrigin);
+      endInput.addListener('place_changed', addEndpoint);
 
     }
+    function addEndpoint(){
+      var place = endInput.getPlace();
+      endpoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+      addThingy(place);
+      placeMarker(place,2);
+    }
+
+    function addOrigin(){
+      var place = originInput.getPlace();
+      origin = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+      addThingy(place);
+      placeMarker(place,0);
+    }
+    
 
     function addToList(){
       var place = autocomplete.getPlace();
-      marker = new google.maps.Marker({
-        position: place.geometry.location,
-        title: place.name,
-      });
-      addresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
-      marker.setMap(map);
+      placeMarker(place,1);
 
       console.log(addresses);
+      addThingy(place);
+
       counter ++;
       if (counter == 2){
         service = new google.maps.DistanceMatrixService();
@@ -148,7 +158,7 @@
       }
 
     }
-
+  
   function callback(response, status) {
     if (status == 'OK') {
       var origins = response.originAddresses;
@@ -157,8 +167,44 @@
       
     } 
   }
+  function addThingy(place){
+    list = document.getElementById("listOfThings");
+      item = document.createElement('tr');
+      row = document.createElement('td')
+      row.appendChild(document.createTextNode(place.name));
+      item.appendChild(row);
+      list.appendChild(item);
 
+      
 
+  }
+  function placeMarker(place, state){
+    switch(state){
+      case 1:
+        marker = new google.maps.Marker({
+          position: place.geometry.location,
+          title: place.name,
+        });
+        break;
+        case 0:
+        marker = new google.maps.Marker({
+          position: place.geometry.location,
+          title: place.name,
+          label: "Α",
+        });
+        break;
+        case 2:
+        marker = new google.maps.Marker({
+          position: place.geometry.location,
+          title: place.name,
+          label: "Ω",
+        });
+    }
+
+      
+      addresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
+      marker.setMap(map);
+    }
 
     // Bias the autocomplete object to the user's geographical location,
     // as supplied by the browser's 'navigator.geolocation' object.
