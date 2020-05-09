@@ -80,13 +80,11 @@ public class TSP{
       }
 
     }
-    else
-    {
-        for (int i = l; i <= r; i++)
-        {
+    else{
+        for (int i = l; i <= r; i++){
           input = swap(input,l,i);
-            permute(input, l+1, r);
-            input = swap(input,l,i);
+          permute(input, l+1, r);
+          input = swap(input,l,i);
         }
     }
   }
@@ -106,10 +104,10 @@ public class TSP{
   static double calcLength(int[] arg){
     double len = 0;
     int prev = 0;
-      for (int i = 0; i < arg.length; i++){
-        len += lengths[prev][arg[i]-1];
-        prev = arg[i]-1;
-      }
+    for (int i = 0; i < arg.length; i++){
+      len += lengths[prev][arg[i]-1];
+      prev = arg[i]-1;
+    }
 
     return len;
   }

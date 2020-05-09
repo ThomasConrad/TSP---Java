@@ -25,14 +25,14 @@
       padding: 10pt;
       text-align: left;
       background:white;
-      margin-left:5%;
+      margin-left:3%;
       margin-top:2%;
       width:100%;
     }
     td{
       padding-left: 10pt;
       padding-right:10pt;
-      margin:5%;
+      margin:3%;
     }
     input{
       margin-top:0.5%;
@@ -40,6 +40,8 @@
       border-color: black;
       border-style: solid;
       border-width: 1pt;
+      margin-left: 3%;
+      font-size:12pt
     }
     button{
       background: white;
@@ -48,7 +50,6 @@
       border-width: 1pt;
       color:black;
     }
-
   </style>
   <link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
   
@@ -59,18 +60,30 @@
 <section style="font-size:12pt"id = "things" class="autocomplete">
   
   
-  <div id="Adresses">
-    <input size="35" style="font-size:12pt;margin-left:5%" id="originInput" placeholder="Enter your origin" onFocus="geolocate()" type="text" />
+  <div id="Addresses">
+    <input size="40" style="font-size:12pt" id="originInput" placeholder="Enter your origin, leave blank if none" onFocus="geolocate()" type="text" />
   </div>
   <div id="Origin">
-    <input size="35" style="font-size:12pt;margin-left:5%"  id="autocomplete" placeholder="Enter your stops" onFocus="geolocate()" type="text" />
+    <input size="40" style="font-size:12pt"  id="autocomplete" placeholder="Enter your stops" onFocus="geolocate()" type="text" />
   </div>
   <div id="Endpoint">
-    <input size="35" style="font-size:12pt;margin-left:5%" id="endInput" placeholder="Enter your endpoint" onFocus="geolocate()" type="text" />
+    <input size="40" style="font-size:12pt" id="endInput" placeholder="Enter your endpoint, leave blank if none" onFocus="geolocate()" type="text" />
   </div>
-  <button type="button" style="font-size:12pt;margin-left:5%;margin-top: 2%" onclick="alert('Hello world!')"> Calculate route! </button>
+  
+  <div>
+    <input  type="datetime-local" id="tdrTime" name="tdrTime">
+      <select id="mode">
+        <option value="DRIVING">Driving</option>
+        <option value="WALKING">Walking</option>
+        <option value="BICYCLING">Bicycling</option>
+        <option value="TRANSIT">Transit</option>
+      </select>
 
-  <table id="listOfThings"style="border:1px solid black">
+  </div>
+  
+  <button type="button" style="font-size:12pt;margin-left:3%;margin-top: 2%" onclick=findRoute()> Calculate route! </button>  
+  <div><input size="5" type="text" id="bestTime" value="Best time" readonly></div>
+  <table id="listOfThings"style="border:1pt solid black">
     <th>Addresses</th>
   </table>
 </section>
@@ -85,10 +98,21 @@
     var addresses = new Array();
     var counter = 0;
     var service;
-    var origin;
+    var startpoint;
     var endpoint;
-
+    var distanceMatrix;
+    var startOffset = 0;
+    var endOffset = 0;
+    var bestPath;
+    var bestLength;
+    var comb = [];
+    var time;
+    var date;
     var placeSearch, autocomplete, originInput, endInput;
+    var directionsService;
+    var directionsDisplay; 
+    var directionRenderers = [];
+    var kat = true;
 
     var componentForm = {
       street_number: 'short_name',
@@ -101,108 +125,93 @@
     
 
     function initAutocomplete() {
-      // Create the autocomplete object, restricting the search predictions to
-      // geographical location types.
      
       var mapOptions = {
         center: new google.maps.LatLng(55.7635, 12.4949),
         zoom: 10,
         fullscreenControl: false
       };
-
+      time = new Date();
       map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
       map.controls[google.maps.ControlPosition.LEFT].push(document.getElementById('things'));
       autocomplete = new google.maps.places.Autocomplete(document.getElementById('autocomplete'), { types: ['geocode'] });
       originInput = new google.maps.places.Autocomplete(document.getElementById('originInput'), { types: ['geocode'] });
       endInput = new google.maps.places.Autocomplete(document.getElementById('endInput'), { types: ['geocode'] });
+      tdrTime = document.getElementById("tdrTime");
 
-      autocomplete.addListener('place_changed',addToList);
+      autocomplete.addListener('place_changed',addMidpoint);
       originInput.addListener('place_changed', addOrigin);
       endInput.addListener('place_changed', addEndpoint);
-
+      tdrTime.onchange = function(){
+        time = new Date(tdrTime.value);
+      
+        
+      }
+      document.getElementById("tdrTime").value = new Date(new Date().toString().split('GMT')[0]+' UTC').toISOString().split('.')[0];
+      
     }
+
     function addEndpoint(){
       var place = endInput.getPlace();
       endpoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
-      addThingy(place);
-      placeMarker(place,2);
+      addToList(place);
+      placeMarker(place,2); 
     }
 
     function addOrigin(){
       var place = originInput.getPlace();
-      origin = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
-      addThingy(place);
+      startpoint = new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng());
+      addToList(place);
       placeMarker(place,0);
     }
-    
 
-    function addToList(){
+    function addMidpoint(){
       var place = autocomplete.getPlace();
       placeMarker(place,1);
 
       console.log(addresses);
-      addThingy(place);
+      addToList(place);
 
-      counter ++;
-      if (counter == 2){
-        service = new google.maps.DistanceMatrixService();
-        service.getDistanceMatrix({
-          origins: [addresses[0]],
-          destinations: [addresses[1]],
-          travelMode: 'TRANSIT',
-          unitSystem: google.maps.UnitSystem.METRIC,
-          avoidHighways: false,
-          avoidTolls: false
-        },callback)
+      
         
       }
 
+    function addToList(place){
+      list = document.getElementById("listOfThings");
+        item = document.createElement('tr');
+        row = document.createElement('td')
+        row.appendChild(document.createTextNode(place.name));
+        item.appendChild(row);
+        list.appendChild(item);
+
+    
+
     }
-  
-  function callback(response, status) {
-    if (status == 'OK') {
-      var origins = response.originAddresses;
-      var destinations = response.destinationAddresses;
-      console.log(response.rows)
-      
-    } 
-  }
-  function addThingy(place){
-    list = document.getElementById("listOfThings");
-      item = document.createElement('tr');
-      row = document.createElement('td')
-      row.appendChild(document.createTextNode(place.name));
-      item.appendChild(row);
-      list.appendChild(item);
-
-      
-
-  }
-  function placeMarker(place, state){
-    switch(state){
-      case 1:
-        marker = new google.maps.Marker({
-          position: place.geometry.location,
-          title: place.name,
-        });
-        break;
+    function placeMarker(place, state){
+      switch(state){
+        case 1:
+          marker = new google.maps.Marker({
+            position: place.geometry.location,
+            title: place.name,
+          });
+          addresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
+          break;
         case 0:
-        marker = new google.maps.Marker({
-          position: place.geometry.location,
-          title: place.name,
-          label: "Α",
-        });
-        break;
+          marker = new google.maps.Marker({
+            position: place.geometry.location,
+            title: place.name,
+            label: "Α",
+          });
+          break;
         case 2:
-        marker = new google.maps.Marker({
-          position: place.geometry.location,
-          title: place.name,
-          label: "Ω",
-        });
-    }
+          marker = new google.maps.Marker({
+            position: place.geometry.location,
+            title: place.name,
+            label: "Ω",
+          });
+      }
 
-      
-      addresses.push(new google.maps.LatLng(place.geometry.location.lat(), place.geometry.location.lng()));
       marker.setMap(map);
     }
 
@@ -222,6 +231,144 @@
         });
       }
     }
+
+    function findRoute(){
+      if (typeof startpoint !== 'undefined') {
+        addresses.unshift(startpoint);
+        startOffset = 1;
+      }
+      if (typeof endpoint !== 'undefined') {
+        addresses.push(endpoint);
+        endOffset = 1;
+      }
+      
+
+      service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
+        origins: addresses,
+        destinations: addresses,
+        travelMode: document.getElementById('mode').value,
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false,
+        drivingOptions:{
+          departureTime: time
+        }
+        
+      },addDist)
+
+      
+      for (var i = 0 + startOffset ; i <= addresses.length-1-endOffset; i++) {
+          comb.push(i);
+      }
+      console.log(comb);
+    
+    }
+
+
+    function permute(input, l, r){
+      if(l==r){
+        if (calcLength(input) <= bestLength){
+          bestLength = calcLength(input);
+          bestPath = input.slice(0);
+        }
+        console.log(input);
+      }
+      else{
+        for(var i = l; i <= r; i++){
+          input = swap(input,l,i);
+          permute(input,l+1,r);
+          input = swap(input,l,i);
+        }
+      }
+    }
+
+    function calcLength(arg){
+      var len = 0;
+      var prev = arg[0];
+      if (typeof startpoint !== 'undefined' && typeof endpoint !== 'undefined' && comb.length == 0) {
+        bestPath = [0,1];
+        kat = false;
+        return distanceMatrix[0].elements[1].duration.value;
+      }
+      if (typeof startpoint !== 'undefined') {
+        len += distanceMatrix[0].elements[arg[0]].duration.value;
+      }
+      if (typeof endpoint !== 'undefined') {
+        len += distanceMatrix[arg[arg.length-1]].elements[distanceMatrix.length-1].duration.value;
+      }
+      for (var i = 1; i < arg.length; i++){
+        len += distanceMatrix[prev].elements[arg[i]].duration.value;
+        prev = arg[i];
+      }
+      return len;
+
+    }
+    function swap(a,i,j){
+      temp = a[i];
+      a[i] = a[j];
+      a[j] = temp;
+      return a;
+    }
+
+
+    function showRoute(i,j){
+
+
+      for (i = 0; i < addresses.length-1;i++){
+        var request = {
+          origin: addresses[bestPath[i]],
+          destination: addresses[bestPath[i+1]],
+          travelMode: document.getElementById('mode').value,
+          unitSystem: google.maps.UnitSystem.METRIC,
+          avoidHighways: false,
+          avoidTolls: false,
+          drivingOptions:{
+            departureTime: time
+          }
+        };
+        var directionsService = new google.maps.DirectionsService();
+        directionsService.route(request, function(response, status){                    
+            if(status == google.maps.DirectionsStatus.OK){
+                // create a new DirectionsRenderer for this route
+                var dirRenderer = new google.maps.DirectionsRenderer({map: map,suppressMarkers: true});
+                dirRenderer.setDirections(response);
+                directionRenderers.push(dirRenderer);   // track the renderers
+            }
+        });
+
+      }
+
+
+
+    }
+
+    function addDist(response, status) {
+    if (status == 'OK') {
+      var origins = response.originAddresses;
+      var destinations = response.destinationAddresses;
+      distanceMatrix = response.rows;
+      console.log(response.rows);
+      bestLength = calcLength(comb);
+      permute(comb,0,comb.length-1);
+      if (typeof startpoint !== 'undefined' && kat) {
+        bestPath.unshift(0);
+      }
+      if (typeof endpoint !== 'undefined' && kat) {
+        bestPath.push(bestPath.length);
+      }
+      showRoute();
+      document.getElementById("bestTime").value = secondsToTime(bestLength);
+    } 
+  }
+
+  const secondsToTime = (seconds, locale) => {
+    const date = new Date(0);
+    date.setHours(0, 0, seconds, 0);
+    return date.toLocaleTimeString(locale);
+  }
+
+
   </script>
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCsVMd2HHo2ITwGggTsc7D05HinN_wogCY&libraries=places&callback=initAutocomplete"
     async defer></script>
